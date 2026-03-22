@@ -1,0 +1,44 @@
+<tr id="entry-{{ entry.pk }}">
+    <form id="csrf-entry-{{ entry.pk }}" style="display:none">{% csrf_token %}</form>
+
+    <td class="px-3 py-2 font-mono font-bold text-blue-700">{{ entry.queue_number }}</td>
+    <td class="px-3 py-2 font-medium text-gray-900">{{ entry.transaction.patient.full_name }}</td>
+    <td class="px-3 py-2">
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold
+            {% if entry.status == 'waiting' %}bg-gray-100 text-gray-600
+            {% elif entry.status == 'called' %}bg-blue-100 text-blue-700
+            {% elif entry.status == 'processing' %}bg-amber-100 text-amber-700
+            {% elif entry.status == 'done' %}bg-green-100 text-green-700
+            {% else %}bg-red-100 text-red-600{% endif %}">
+            {{ entry.get_status_display }}
+        </span>
+    </td>
+    <td class="px-3 py-2 text-gray-400">{{ entry.arrived_at|date:"H:i" }}</td>
+    <td class="px-3 py-2 text-gray-400">{{ entry.called_at|date:"H:i"|default:"—" }}</td>
+    <td class="px-3 py-2 text-gray-400">{{ entry.processed_at|date:"H:i"|default:"—" }}</td>
+    <td class="px-3 py-2 text-gray-400">{{ entry.done_at|date:"H:i"|default:"—" }}</td>
+    <td class="px-3 py-2 text-right whitespace-nowrap">
+        {% if entry.status == 'processing' %}
+            <button
+                hx-post="{% url 'dashboard:queue_entry_status' entry.pk %}"
+                hx-vals='{"action":"done"}'
+                hx-target="#entry-{{ entry.pk }}"
+                hx-swap="outerHTML"
+                hx-include="#csrf-entry-{{ entry.pk }}"
+                class="text-xs bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1 rounded-lg transition mr-1">
+                Done
+            </button>
+        {% endif %}
+        {% if entry.status != 'done' and entry.status != 'no_show' %}
+            <button
+                hx-post="{% url 'dashboard:queue_entry_status' entry.pk %}"
+                hx-vals='{"action":"no_show"}'
+                hx-target="#entry-{{ entry.pk }}"
+                hx-swap="outerHTML"
+                hx-include="#csrf-entry-{{ entry.pk }}"
+                class="text-xs bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-600 font-semibold px-3 py-1 rounded-lg transition">
+                No Show
+            </button>
+        {% endif %}
+    </td>
+</tr>

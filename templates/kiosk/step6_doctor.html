@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Choose a Doctor — Kiosk{% endblock %}
+{% block content %}
+
+<div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    <div class="px-6 pt-6 pb-4 border-b border-slate-50">
+        <a href="{% url back_url %}"
+           class="inline-flex items-center gap-1.5 text-slate-400 hover:text-slate-600 text-sm font-medium mb-4 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back
+        </a>
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-slate-800">Choose a Doctor</h2>
+                <p class="text-slate-400 text-sm">Select a doctor for your consultation</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-6">
+        <form method="post" action="{% url 'kiosk:step6' %}">
+            {% csrf_token %}
+
+            <div class="space-y-2 mb-6">
+
+                <!-- No Preference -->
+                <label class="cursor-pointer block">
+                    <input type="radio" name="doctor_id" value="none" class="sr-only peer"
+                        {% if not selected_doctor_id %}checked{% endif %}>
+                    <div class="peer-checked:border-blue-500 peer-checked:bg-blue-50
+                        border-2 border-slate-200 rounded-xl p-4 flex items-center gap-3 transition-all active:scale-[0.99]">
+                        <div class="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-800">No Preference</p>
+                            <p class="text-slate-400 text-sm">Assign me to any available doctor</p>
+                        </div>
+                    </div>
+                </label>
+
+                <!-- Doctor List -->
+                {% for doctor in doctors %}
+                <label class="cursor-pointer block">
+                    <input type="radio" name="doctor_id" value="{{ doctor.pk }}" class="sr-only peer"
+                        {% if selected_doctor_id == doctor.pk %}checked{% endif %}>
+                    <div class="peer-checked:border-blue-500 peer-checked:bg-blue-50
+                        border-2 border-slate-200 rounded-xl p-4 flex items-center gap-3 transition-all active:scale-[0.99]">
+                        <div class="w-11 h-11 rounded-xl bg-blue-700 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                            {{ doctor.first_name|slice:":1" }}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-slate-900">{{ doctor.full_name }}</p>
+                            <p class="text-blue-600 text-sm font-medium">{{ doctor.specialization }}</p>
+                            {% if doctor.schedule_notes %}
+                            <p class="text-slate-400 text-xs mt-0.5 truncate">{{ doctor.schedule_notes }}</p>
+                            {% endif %}
+                        </div>
+                        {% if doctor.room_number %}
+                        <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-semibold flex-shrink-0">
+                            Rm {{ doctor.room_number }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </label>
+                {% empty %}
+                <div class="text-center py-10 text-slate-400">
+                    <svg class="w-10 h-10 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <p class="font-medium">No doctors available today</p>
+                    <p class="text-sm mt-1">You will be assigned automatically</p>
+                </div>
+                {% endfor %}
+
+            </div>
+
+            <button type="submit"
+                class="w-full kiosk-btn-primary text-white text-lg font-bold py-4 rounded-xl transition flex items-center justify-center gap-2">
+                Continue
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

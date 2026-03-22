@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Display — MetroHealth Specialists Hospital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0f172a; }
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .serving-num { animation: pulse-soft 2s ease-in-out infinite; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-white">
+
+    <!-- Header -->
+    <header class="bg-blue-900 px-10 py-5 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center font-bold text-xl">H</div>
+            <div>
+                <p class="text-xl font-bold leading-tight">MetroHealth Specialists Hospital</p>
+                <p class="text-blue-300 text-sm">OPD Queue Display</p>
+            </div>
+        </div>
+        <div class="text-right">
+            <p class="text-3xl font-bold tabular-nums" id="clock">--:--:--</p>
+            <p class="text-blue-300 text-sm" id="date-display"></p>
+        </div>
+    </header>
+
+    <!-- Queue cards -->
+    <main class="flex-1 p-8 grid gap-6
+        {% if rows|length == 1 %}grid-cols-1
+        {% elif rows|length == 2 %}grid-cols-2
+        {% elif rows|length == 3 %}grid-cols-3
+        {% else %}grid-cols-2 lg:grid-cols-4{% endif %}
+        content-start">
+
+        {% for row in rows %}
+        <div class="bg-slate-800 rounded-3xl flex flex-col items-center justify-center py-10 px-6 border border-slate-700 shadow-2xl">
+            <!-- Service name -->
+            <div class="flex items-center gap-3 mb-6">
+                <span class="text-4xl">{{ row.service.icon }}</span>
+                <span class="text-2xl font-bold text-blue-300 uppercase tracking-wider">{{ row.service.label }}</span>
+            </div>
+
+            <!-- Now Serving label -->
+            <p class="text-slate-400 text-sm font-semibold uppercase tracking-widest mb-2">Now Serving</p>
+
+            <!-- Queue number — large and prominent -->
+            <p class="serving-num font-black tabular-nums leading-none text-white
+                {% if row.serving_label == '—' %}text-7xl text-slate-500{% else %}text-8xl{% endif %}">
+                {{ row.serving_label }}
+            </p>
+
+            <!-- Waiting count -->
+            <div class="mt-8 flex items-center gap-2">
+                <span class="text-slate-400 text-sm">Waiting:</span>
+                <span class="bg-orange-500 text-white text-sm font-bold px-3 py-1 rounded-full">
+                    {{ row.waiting }}
+                </span>
+            </div>
+
+            <!-- Recently called -->
+            {% if row.recently_called %}
+            <div class="mt-6 w-full border-t border-slate-700 pt-4">
+                <p class="text-slate-500 text-xs uppercase tracking-widest mb-2 text-center">Recently Called</p>
+                {% for entry in row.recently_called %}
+                <div class="flex items-center justify-between py-1">
+                    <span class="font-mono text-sm text-slate-300">{{ entry.queue_number }}</span>
+                    <span class="text-xs
+                        {% if entry.status == 'processing' %}text-blue-400
+                        {% elif entry.status == 'done' %}text-green-400
+                        {% else %}text-slate-400{% endif %}">
+                        {{ entry.get_status_display }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="col-span-4 flex items-center justify-center text-slate-500 text-xl">
+            No active services.
+        </div>
+        {% endfor %}
+    </main>
+
+    <!-- Footer ticker -->
+    <footer class="bg-blue-900 px-10 py-3 text-blue-300 text-sm flex items-center justify-between flex-shrink-0">
+        <span>Please listen for your queue number to be called.</span>
+        <span class="text-xs text-blue-500">Auto-refreshes every 5 seconds</span>
+    </footer>
+
+    <script>
+        // Clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('en-PH', { hour12: true });
+            document.getElementById('date-display').textContent = now.toLocaleDateString('en-PH', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Auto-refresh page every 5 seconds to pick up queue updates
+        setTimeout(() => location.reload(), 5000);
+    </script>
+</body>
+</html>

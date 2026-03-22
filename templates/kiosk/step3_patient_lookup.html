@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Find Your Record — Kiosk{% endblock %}
+{% block content %}
+
+<div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    <div class="px-6 pt-6 pb-4 border-b border-slate-50">
+        <a href="{% url back_url %}"
+           class="inline-flex items-center gap-1.5 text-slate-400 hover:text-slate-600 text-sm font-medium mb-4 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back
+        </a>
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-slate-800">Find Your Record</h2>
+                <p class="text-slate-400 text-sm">Search by last name or HRN number</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-6">
+        <!-- Search input -->
+        <div class="relative mb-2">
+            <svg class="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+            </svg>
+            <input
+                type="text"
+                name="q"
+                id="patient-search"
+                placeholder="Type last name or HRN number…"
+                autocomplete="off"
+                autofocus
+                hx-get="{% url 'kiosk:patient_search' %}"
+                hx-trigger="keyup changed delay:400ms, search"
+                hx-target="#search-results"
+                hx-indicator="#search-spinner"
+                class="w-full border-2 border-slate-200 focus:border-blue-500 rounded-xl pl-12 pr-4 py-3.5 text-base text-slate-800 placeholder-slate-400 outline-none transition">
+            <div id="search-spinner" class="htmx-indicator absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 text-xs font-semibold">
+                Searching…
+            </div>
+        </div>
+        <p class="text-xs text-slate-400 mb-5">Type at least 2 characters to search</p>
+
+        <div id="search-results"></div>
+
+        <!-- Fallback -->
+        <div class="mt-6 pt-5 border-t border-slate-100">
+            <p class="text-slate-400 text-sm text-center mb-3">Can't find your record?</p>
+            <form method="post" action="{% url 'kiosk:step2' %}">
+                {% csrf_token %}
+                <button type="submit" name="patient_type" value="new"
+                    class="w-full bg-slate-50 hover:bg-slate-100 active:scale-[0.99] border border-slate-200 text-slate-600 font-semibold py-3.5 rounded-xl text-base transition">
+                    Register as New Patient
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

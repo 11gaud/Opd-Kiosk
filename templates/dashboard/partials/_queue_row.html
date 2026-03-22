@@ -1,0 +1,72 @@
+<div id="queue-row-{{ row.service.pk }}" class="bg-white rounded-xl shadow-sm border border-gray-100">
+    <!-- Hidden CSRF for HTMX -->
+    <form id="csrf-form-{{ row.service.pk }}" style="display:none">{% csrf_token %}</form>
+
+    <!-- Service header + stats -->
+    <div class="p-4">
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">{{ row.service.icon }}</span>
+                <span class="font-bold text-gray-800">{{ row.service.label }}</span>
+            </div>
+            <form method="post" action="{% url 'dashboard:queue_reset' row.service.pk %}"
+                  onsubmit="return confirm('Reset queue for {{ row.service.label }}? This cannot be undone.')">
+                {% csrf_token %}
+                <button type="submit" class="text-xs text-red-500 hover:text-red-700 font-medium transition">Reset</button>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-center mb-4">
+            <div class="bg-blue-50 rounded-lg py-2">
+                <p class="text-2xl font-bold text-blue-700">{{ row.issued }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">Issued</p>
+            </div>
+            <div class="bg-green-50 rounded-lg py-2">
+                <p class="text-2xl font-bold text-green-600">{{ row.serving_label }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">Now Serving</p>
+            </div>
+            <div class="bg-orange-50 rounded-lg py-2">
+                <p class="text-2xl font-bold text-orange-500">{{ row.waiting }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">Waiting</p>
+            </div>
+        </div>
+
+        <button
+            hx-post="{% url 'dashboard:queue_call_next' row.service.pk %}"
+            hx-target="#queue-row-{{ row.service.pk }}"
+            hx-swap="outerHTML"
+            hx-include="#csrf-form-{{ row.service.pk }}"
+            {% if row.waiting == 0 %}disabled{% endif %}
+            class="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed
+                   text-white rounded-lg py-2 text-sm font-semibold transition">
+            Call Next
+        </button>
+    </div>
+
+    <!-- Patient list -->
+    <div class="border-t border-gray-100 overflow-x-auto">
+        <table class="w-full text-xs">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-3 py-2 text-left text-gray-400 font-semibold uppercase tracking-wide">Queue #</th>
+                    <th class="px-3 py-2 text-left text-gray-400 font-semibold uppercase tracking-wide">Patient</th>
+                    <th class="px-3 py-2 text-left text-gray-400 font-semibold uppercase tracking-wide">Status</th>
+                    <th class="px-3 py-2 text-left text-gray-400 font-semibold uppercase tracking-wide">Arrived</th>
+                    <th class="px-3 py-2 text-left text-gray-400 font-semibold uppercase tracking-wide">Called</th>
+                    <th class="px-3 py-2 text-left text-gray-400 font-semibold uppercase tracking-wide">Process</th>
+                    <th class="px-3 py-2 text-left text-gray-400 font-semibold uppercase tracking-wide">Done</th>
+                    <th class="px-3 py-2 text-left text-gray-400 font-semibold uppercase tracking-wide">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50" id="entry-list-{{ row.service.pk }}">
+                {% for entry in row.entries %}
+                    {% include "dashboard/partials/_queue_entry_row.html" with entry=entry %}
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="px-3 py-4 text-center text-gray-300 italic">No patients yet today.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

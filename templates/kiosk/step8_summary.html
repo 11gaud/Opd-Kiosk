@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Review & Confirm — Kiosk{% endblock %}
+{% block content %}
+
+<div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    <div class="px-6 pt-6 pb-4 border-b border-slate-50">
+        <a href="{% url back_url %}"
+           class="inline-flex items-center gap-1.5 text-slate-400 hover:text-slate-600 text-sm font-medium mb-4 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back
+        </a>
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-slate-800">Review Your Information</h2>
+                <p class="text-slate-400 text-sm">Confirm everything is correct before proceeding</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-6 space-y-4">
+
+        <!-- Services -->
+        <div class="rounded-xl border border-slate-100 overflow-hidden">
+            <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-100">
+                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Selected Services</p>
+            </div>
+            <div class="px-4 py-3 flex flex-wrap gap-2">
+                {% for svc in services %}
+                <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-full text-sm font-semibold">
+                    {{ svc.icon }} {{ svc.label }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Personal Info -->
+        <div class="rounded-xl border border-slate-100 overflow-hidden">
+            <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-100 flex justify-between items-center">
+                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Personal Information</p>
+                <a href="{% url 'kiosk:step4' %}" class="text-xs text-blue-600 font-semibold hover:underline">Edit</a>
+            </div>
+            <dl class="divide-y divide-slate-50">
+                <div class="flex px-4 py-2.5 gap-4">
+                    <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Full Name</dt>
+                    <dd class="text-sm font-semibold text-slate-800">{{ session_data.personal_info.first_name }} {{ session_data.personal_info.middle_name }} {{ session_data.personal_info.last_name }}</dd>
+                </div>
+                <div class="flex px-4 py-2.5 gap-4">
+                    <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Birthday</dt>
+                    <dd class="text-sm font-medium text-slate-700">{{ session_data.personal_info.birthdate }}</dd>
+                </div>
+                <div class="flex px-4 py-2.5 gap-4">
+                    <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Sex</dt>
+                    <dd class="text-sm font-medium text-slate-700">{% if session_data.personal_info.sex == 'M' %}Male{% else %}Female{% endif %}</dd>
+                </div>
+                <div class="flex px-4 py-2.5 gap-4">
+                    <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Phone</dt>
+                    <dd class="text-sm font-medium text-slate-700">{{ session_data.personal_info.phone_number }}</dd>
+                </div>
+                <div class="flex px-4 py-2.5 gap-4">
+                    <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Address</dt>
+                    <dd class="text-sm font-medium text-slate-700">{{ session_data.personal_info.address }}</dd>
+                </div>
+                {% if session_data.personal_info.civil_status %}
+                <div class="flex px-4 py-2.5 gap-4">
+                    <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Civil Status</dt>
+                    <dd class="text-sm font-medium text-slate-700 capitalize">{{ session_data.personal_info.civil_status }}</dd>
+                </div>
+                {% endif %}
+                {% if session_data.personal_info.hrn_number %}
+                <div class="flex px-4 py-2.5 gap-4">
+                    <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">HRN No.</dt>
+                    <dd class="text-sm font-mono font-semibold text-slate-700">{{ session_data.personal_info.hrn_number }}</dd>
+                </div>
+                {% endif %}
+            </dl>
+        </div>
+
+        <!-- Payment -->
+        <div class="rounded-xl border border-slate-100 overflow-hidden">
+            <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-100 flex justify-between items-center">
+                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Payment</p>
+                <a href="{% url 'kiosk:step5' %}" class="text-xs text-blue-600 font-semibold hover:underline">Edit</a>
+            </div>
+            <dl class="divide-y divide-slate-50">
+                <div class="flex px-4 py-2.5 gap-4">
+                    <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Method</dt>
+                    <dd class="text-sm font-semibold text-slate-800">{{ payment_label }}</dd>
+                </div>
+                {% if session_data.hmo_provider %}
+                <div class="flex px-4 py-2.5 gap-4">
+                    <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Provider</dt>
+                    <dd class="text-sm font-medium text-slate-700">{{ session_data.hmo_provider }}</dd>
+                </div>
+                <div class="flex px-4 py-2.5 gap-4">
+                    <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Member ID</dt>
+                    <dd class="text-sm font-medium text-slate-700">{{ session_data.hmo_membership_id }}</dd>
+                </div>
+                {% endif %}
+                {% if session_data.corporate_company %}
+                <div class="flex px-4 py-2.5 gap-4">
+                    <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Company</dt>
+                    <dd class="text-sm font-medium text-slate-700">{{ session_data.corporate_company }}</dd>
+                </div>
+                {% endif %}
+                {% if session_data.government_program %}
+                <div class="flex px-4 py-2.5 gap-4">
+                    <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Program</dt>
+                    <dd class="text-sm font-medium text-slate-700">{{ session_data.government_program }}</dd>
+                </div>
+                {% endif %}
+            </dl>
+        </div>
+
+        <!-- Doctor -->
+        {% if doctor %}
+        <div class="rounded-xl border border-slate-100 overflow-hidden">
+            <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-100 flex justify-between items-center">
+                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Doctor</p>
+                <a href="{% url 'kiosk:step6' %}" class="text-xs text-blue-600 font-semibold hover:underline">Edit</a>
+            </div>
+            <div class="px-4 py-3 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-700 flex items-center justify-center text-white font-bold flex-shrink-0">
+                    {{ doctor.first_name|slice:":1" }}
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800 text-sm">{{ doctor.full_name }}</p>
+                    <p class="text-blue-600 text-xs">{{ doctor.specialization }}</p>
+                    {% if doctor.room_number %}<p class="text-slate-400 text-xs">Room {{ doctor.room_number }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Error -->
+        <div id="confirm-error" class="hidden bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-sm"></div>
+
+        <!-- Confirm button -->
+        <button id="confirm-btn"
+            class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 active:scale-[0.99] text-white text-lg font-bold py-4 rounded-xl transition flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Confirm & Get Queue Number
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('confirm-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('confirm-btn');
+    const errDiv = document.getElementById('confirm-error');
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Processing…';
+    errDiv.classList.add('hidden');
+    try {
+        const fd = new FormData();
+        fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        const resp = await fetch('{% url "kiosk:confirm" %}', { method: 'POST', body: fd });
+        const data = await resp.json();
+        if (resp.ok && data.redirect) {
+            window.location.href = data.redirect;
+        } else {
+            errDiv.textContent = data.error || 'An error occurred. Please try again.';
+            errDiv.classList.remove('hidden');
+            btn.disabled = false;
+            btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Confirm & Get Queue Number';
+        }
+    } catch {
+        errDiv.textContent = 'Network error. Please try again.';
+        errDiv.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = 'Confirm & Get Queue Number';
+    }
+});
+</script>
+{% endblock %}

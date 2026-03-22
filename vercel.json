@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.py"
+    }
+  ],
+  "buildCommand": "chmod +x build_files.sh && ./build_files.sh",
+  "env": {
+    "DJANGO_SETTINGS_MODULE": "config.settings"
+  }
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "model": "services.service",
+    "pk": 1,
+    "fields": {
+      "code": "CONSULT",
+      "label": "Consult",
+      "prefix": "CON",
+      "icon": "\ud83c\udfe5",
+      "is_active": true,
+      "display_order": 1
+    }
+  },
+  {
+    "model": "services.service",
+    "pk": 2,
+    "fields": {
+      "code": "LAB",
+      "label": "Laboratory",
+      "prefix": "LAB",
+      "icon": "\ud83e\uddea",
+      "is_active": true,
+      "display_order": 2
+    }
+  },
+  {
+    "model": "services.service",
+    "pk": 3,
+    "fields": {
+      "code": "APE",
+      "label": "APE",
+      "prefix": "APE",
+      "icon": "\ud83d\udccb",
+      "is_active": true,
+      "display_order": 3
+    }
+  },
+  {
+    "model": "services.service",
+    "pk": 4,
+    "fields": {
+      "code": "PROCEDURE",
+      "label": "Procedure",
+      "prefix": "PRO",
+      "icon": "\ud83d\udd2c",
+      "is_active": true,
+      "display_order": 4
+    }
+  }
+]

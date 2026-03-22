@@ -1,0 +1,28 @@
+{% with labels="Services,Type,Info,Payment,Doctor,Sign,Review,Ticket" %}
+<div class="flex items-center">
+    {% for label in labels|slice:":8" %}
+    {% with i=forloop.counter %}
+    <div class="flex flex-col items-center flex-shrink-0">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all
+            {% if i < step %}bg-blue-500 text-white
+            {% elif i == step %}bg-white text-blue-700 ring-2 ring-blue-400 ring-offset-1 ring-offset-slate-900
+            {% else %}bg-slate-700 text-slate-400{% endif %}">
+            {% if i < step %}
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+            {% else %}{{ i }}{% endif %}
+        </div>
+        <span class="text-[9px] mt-1 font-medium
+            {% if i < step %}text-blue-400
+            {% elif i == step %}text-white
+            {% else %}text-slate-600{% endif %}
+            hidden sm:block whitespace-nowrap">{{ label }}</span>
+    </div>
+    {% if not forloop.last %}
+    <div class="flex-1 h-px mx-1 {% if i < step %}bg-blue-500{% else %}bg-slate-700{% endif %}"></div>
+    {% endif %}
+    {% endwith %}
+    {% endfor %}
+</div>
+{% endwith %}

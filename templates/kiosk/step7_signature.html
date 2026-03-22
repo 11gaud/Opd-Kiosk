@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Signature & Consent — Kiosk{% endblock %}
+{% block content %}
+
+<div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    <div class="px-6 pt-6 pb-4 border-b border-slate-50">
+        <a href="{% url back_url %}"
+           class="inline-flex items-center gap-1.5 text-slate-400 hover:text-slate-600 text-sm font-medium mb-4 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back
+        </a>
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-slate-800">Signature & Consent</h2>
+                <p class="text-slate-400 text-sm">Please read and sign below</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-6">
+        <!-- Consent text -->
+        <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-5 text-sm text-blue-800 leading-relaxed">
+            I hereby certify that all the information I have provided is true and accurate to the best of my knowledge.
+            I consent to the collection and processing of my personal health information for the purpose of
+            medical treatment, hospital records management, and related services in accordance with the
+            Data Privacy Act.
+        </div>
+
+        <!-- Signature canvas -->
+        <div class="border-2 border-dashed border-slate-300 rounded-xl overflow-hidden bg-slate-50 mb-2 relative">
+            <canvas id="signature-canvas" class="w-full touch-none cursor-crosshair block" style="height:180px"></canvas>
+            <p id="sig-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 pointer-events-none gap-1">
+                <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+                <span class="text-sm font-medium">Sign here</span>
+            </p>
+        </div>
+        <p class="text-xs text-slate-400 text-center mb-5">Use your finger or stylus to sign above</p>
+
+        <div class="flex gap-3 mb-5">
+            <button type="button" id="clear-btn"
+                class="flex-1 border-2 border-slate-200 hover:border-red-300 hover:bg-red-50 text-slate-600 hover:text-red-600 py-3 rounded-xl font-semibold transition">
+                Clear
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'kiosk:step7' %}" id="sig-form">
+            {% csrf_token %}
+            <button type="submit" id="submit-sig"
+                class="w-full kiosk-btn-primary text-white text-lg font-bold py-4 rounded-xl transition flex items-center justify-center gap-2">
+                I Agree & Continue
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </form>
+
+        <div id="saving-msg" class="hidden mt-4 text-center text-blue-600 text-sm font-medium">Saving signature…</div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const canvas = document.getElementById('signature-canvas');
+const placeholder = document.getElementById('sig-placeholder');
+let signaturePad;
+
+function initPad() {
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    canvas.getContext('2d').scale(ratio, ratio);
+    if (signaturePad) signaturePad.clear();
+    else {
+        signaturePad = new SignaturePad(canvas, { minWidth: 1.5, maxWidth: 3, penColor: '#1e3a8a' });
+        signaturePad.addEventListener('beginStroke', () => { placeholder.style.display = 'none'; });
+    }
+}
+window.addEventListener('resize', initPad);
+initPad();
+
+document.getElementById('clear-btn').addEventListener('click', () => {
+    signaturePad.clear();
+    placeholder.style.display = '';
+});
+
+document.getElementById('sig-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (signaturePad.isEmpty()) { alert('Please provide your signature before continuing.'); return; }
+    const savingMsg = document.getElementById('saving-msg');
+    savingMsg.classList.remove('hidden');
+    document.getElementById('submit-sig').disabled = true;
+    const formData = new FormData();
+    formData.append('signature_data_url', signaturePad.toDataURL('image/png'));
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    try {
+        const resp = await fetch('{% url "kiosk:save_signature" %}', { method: 'POST', body: formData });
+        if (resp.ok) {
+            const f = document.createElement('form');
+            f.method = 'POST'; f.action = '{% url "kiosk:step7" %}';
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden'; csrf.name = 'csrfmiddlewaretoken'; csrf.value = '{{ csrf_token }}';
+            f.appendChild(csrf); document.body.appendChild(f); f.submit();
+        } else {
+            alert('Failed to save signature. Please try again.');
+            savingMsg.classList.add('hidden');
+            document.getElementById('submit-sig').disabled = false;
+        }
+    } catch {
+        alert('Network error. Please try again.');
+        savingMsg.classList.add('hidden');
+        document.getElementById('submit-sig').disabled = false;
+    }
+});
+</script>
+{% endblock %}

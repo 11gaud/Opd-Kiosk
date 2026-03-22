@@ -1,0 +1,30 @@
+<div id="day-{{ day|date:'Y-m-d' }}"
+     class="min-h-[60px] rounded-lg p-1.5 border text-xs transition-all
+        {% if day.month != current_month %}bg-gray-50 border-gray-100 opacity-40
+        {% elif schedule and schedule.is_off %}bg-red-50 border-red-200
+        {% elif schedule and schedule.start_time %}bg-green-50 border-green-200
+        {% else %}bg-white border-gray-200{% endif %}
+        {% if day.month == current_month %}cursor-pointer hover:ring-2 hover:ring-blue-300{% endif %}"
+     {% if day.month == current_month %}
+     data-date="{{ day|date:'Y-m-d' }}"
+     data-start="{{ schedule.start_time|time:'H:i'|default:'' }}"
+     data-end="{{ schedule.end_time|time:'H:i'|default:'' }}"
+     data-off="{% if schedule and schedule.is_off %}true{% else %}false{% endif %}"
+     data-note="{{ schedule.note|default:'' }}"
+     onclick="openDayEditor(this)"
+     {% endif %}>
+
+    <span class="font-semibold {% if day.month != current_month %}text-gray-400{% else %}text-gray-700{% endif %}">
+        {{ day.day }}
+    </span>
+
+    <div class="mt-0.5">
+        {% if schedule and schedule.is_off %}
+            <span class="text-red-500 font-medium text-[10px] leading-tight">Off</span>
+        {% elif schedule and schedule.start_time %}
+            <span class="text-green-700 text-[10px] leading-tight block">
+                {{ schedule.start_time|time:"g A" }}–{{ schedule.end_time|time:"g A" }}
+            </span>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Select Services — Kiosk{% endblock %}
+{% block content %}
+
+<div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    <!-- Card header -->
+    <div class="px-6 pt-6 pb-4 border-b border-slate-50">
+        <div class="flex items-center gap-3 mb-1">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 leading-tight">Select Services</h2>
+                <p class="text-slate-400 text-sm">Tap all services you need today</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-6">
+        <form method="post" action="{% url 'kiosk:step1' %}" id="services-form">
+            {% csrf_token %}
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                {% for service in services %}
+                <label class="cursor-pointer" for="svc_{{ service.code }}">
+                    <input type="checkbox" id="svc_{{ service.code }}" name="services" value="{{ service.code }}"
+                        class="hidden peer"
+                        {% if service.code in selected %}checked{% endif %}>
+                    <div class="peer-checked:border-blue-500 peer-checked:bg-blue-50
+                        border-2 border-slate-200 rounded-xl p-4 flex flex-col items-center gap-2
+                        transition-all active:scale-95 relative select-none">
+                        <span class="text-4xl leading-none">{{ service.icon }}</span>
+                        <span class="font-semibold text-slate-700 text-center text-base leading-tight">{{ service.label }}</span>
+                        <!-- Checkmark badge -->
+                        <span class="peer-checked:flex hidden absolute top-2 right-2 w-5 h-5 bg-blue-600 rounded-full items-center justify-center">
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </span>
+                    </div>
+                </label>
+                {% empty %}
+                <p class="col-span-2 text-center text-slate-400 py-10">No services available. Please contact staff.</p>
+                {% endfor %}
+            </div>
+
+            <button type="submit"
+                class="w-full kiosk-btn-primary text-white text-lg font-bold py-4 rounded-xl transition flex items-center justify-center gap-2">
+                Continue
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('input[name="services"]').forEach(cb => {
+    const badge = cb.nextElementSibling.querySelector('span:last-child');
+    cb.addEventListener('change', () => {
+        badge.classList.toggle('flex', cb.checked);
+        badge.classList.toggle('hidden', !cb.checked);
+    });
+    if (cb.checked) { badge.classList.add('flex'); badge.classList.remove('hidden'); }
+});
+</script>
+{% endblock %}

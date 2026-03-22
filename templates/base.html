@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{% block title %}Patient Registration — Kiosk{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js"></script>
+    <script src="{% static 'js/signature_pad.umd.min.js' %}"></script>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        * { -webkit-tap-highlight-color: transparent; }
+        body { user-select: none; overscroll-behavior: none; }
+        input, select, textarea, button { font-size: 1rem; }
+        .htmx-indicator { display: none; }
+        .htmx-request .htmx-indicator { display: block; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; }
+            @page { size: 80mm auto; margin: 5mm; }
+        }
+        .print-only { display: none; }
+        .kiosk-btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+        .kiosk-btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #1e40af); }
+        .kiosk-btn-primary:active { transform: scale(0.99); }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col" style="background:#f1f5f9">
+
+    <!-- Header -->
+    <header class="no-print flex-shrink-0" style="background:#0f172a">
+        <div class="px-6 py-4 flex items-center gap-4">
+            <!-- Branding -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                     style="background:linear-gradient(135deg,#2563eb,#1e40af)">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 3a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H8a1 1 0 110-2h3V7a1 1 0 011-1z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-white font-bold text-sm leading-tight">MetroHealth Specialists Hospital</p>
+                    <p class="text-slate-400 text-xs">OPD Patient Self-Registration</p>
+                </div>
+            </div>
+            <!-- Clock + Start Over -->
+            <div class="ml-auto flex items-center gap-5">
+                <div class="text-right hidden sm:block">
+                    <p class="text-slate-400 text-[11px]" id="clock-date"></p>
+                    <p class="text-slate-200 text-sm font-semibold" id="clock"></p>
+                </div>
+                <form method="post" action="{% url 'kiosk:reset' %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="flex items-center gap-2 text-xs border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 px-3 py-2 rounded-lg transition font-medium">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Start Over
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Progress bar -->
+        {% if step %}
+        <div class="border-t px-6 py-3" style="border-color:#1e293b; background:#0f172a">
+            {% include "partials/_progress_bar.html" %}
+        </div>
+        {% endif %}
+    </header>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="no-print px-4 pt-4 max-w-xl mx-auto w-full">
+        {% for msg in messages %}
+        <div class="mb-2 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3
+            {% if msg.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+            {% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+            {% if msg.tags == 'error' %}
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {% else %}
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {% endif %}
+            {{ msg }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col items-center px-4 py-8">
+        <div class="w-full max-w-xl">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Idle Reset Overlay -->
+    <div id="idle-overlay" class="no-print hidden fixed inset-0 flex items-center justify-center z-50" style="background:rgba(15,23,42,0.75)">
+        <div class="bg-white rounded-2xl shadow-2xl p-10 text-center max-w-sm w-full mx-4">
+            <div class="w-16 h-16 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"/>
+                </svg>
+            </div>
+            <p class="text-slate-500 mb-1 text-lg font-medium">Are you still there?</p>
+            <p class="text-7xl font-black text-blue-700 my-3" id="idle-countdown">30</p>
+            <p class="text-slate-400 mb-7 text-sm">Session resets automatically</p>
+            <button onclick="resetIdleTimer()"
+                class="w-full kiosk-btn-primary text-white text-xl font-bold py-4 rounded-xl mb-3 transition">
+                Continue Session
+            </button>
+            <form method="post" action="{% url 'kiosk:reset' %}">
+                {% csrf_token %}
+                <button type="submit"
+                    class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-lg py-3 rounded-xl transition">
+                    Start Over
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{% static 'js/kiosk.js' %}"></script>
+    <script>
+    (function() {
+        function tick() {
+            const now = new Date();
+            const d = document.getElementById('clock-date');
+            const t = document.getElementById('clock');
+            if (d) d.textContent = now.toLocaleDateString('en-PH', {weekday:'short', month:'short', day:'numeric', year:'numeric'});
+            if (t) t.textContent = now.toLocaleTimeString('en-PH', {hour:'2-digit', minute:'2-digit'});
+        }
+        tick();
+        setInterval(tick, 1000);
+    })();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,34 @@
+{% if patients %}
+<div class="space-y-2 mt-4">
+    {% for patient in patients %}
+    <form method="post" action="{% url 'kiosk:step3' %}">
+        {% csrf_token %}
+        <input type="hidden" name="patient_id" value="{{ patient.pk }}">
+        <button type="submit"
+            class="w-full text-left border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 active:scale-[0.99] bg-white rounded-xl p-4 transition flex items-center gap-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-700 flex items-center justify-center text-white font-bold text-base flex-shrink-0">
+                {{ patient.last_name|slice:":1" }}
+            </div>
+            <div class="flex-1 min-w-0 text-left">
+                <p class="font-bold text-slate-900 text-base leading-tight">{{ patient.last_name }}, {{ patient.first_name }} {% if patient.middle_name %}{{ patient.middle_name }}{% endif %}</p>
+                <p class="text-slate-400 text-xs mt-0.5">
+                    {% if patient.hrn_number %}HRN: {{ patient.hrn_number }} &bull; {% endif %}
+                    {{ patient.birthdate|date:"M d, Y" }} &bull; Age {{ patient.age }} &bull; {{ patient.get_sex_display }}
+                </p>
+            </div>
+            <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+        </button>
+    </form>
+    {% endfor %}
+</div>
+{% elif query %}
+<div class="mt-5 text-center py-8 bg-slate-50 rounded-xl border border-slate-200">
+    <svg class="w-10 h-10 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+    </svg>
+    <p class="text-slate-500 font-medium">No patient found for "{{ query }}"</p>
+    <p class="text-slate-400 text-sm mt-1">Try a different name or HRN number</p>
+</div>
+{% endif %}

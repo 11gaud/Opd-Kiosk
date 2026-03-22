@@ -1,0 +1,106 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Patients{% endblock %}
+{% block page_title %}Patients{% endblock %}
+
+{% block content %}
+<!-- Search & filter bar -->
+<form method="get" class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-5 flex gap-3 items-end flex-wrap">
+    <div class="flex-1 min-w-48">
+        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Search</label>
+        <div class="relative">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+            </svg>
+            <input type="text" name="q" value="{{ q }}" placeholder="Name, HRN, or phone"
+                class="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+        </div>
+    </div>
+    <div>
+        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Sex</label>
+        <div class="relative">
+            <select name="sex" class="appearance-none w-full border border-slate-200 rounded-lg pl-3 pr-8 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition cursor-pointer">
+                <option value="">All</option>
+                <option value="M" {% if sex == 'M' %}selected{% endif %}>Male</option>
+                <option value="F" {% if sex == 'F' %}selected{% endif %}>Female</option>
+            </select>
+            <svg class="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+    </div>
+    <button type="submit"
+        class="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+        </svg>
+        Search
+    </button>
+    {% if q or sex %}
+    <a href="{% url 'dashboard:patient_list' %}"
+       class="flex items-center gap-1 text-sm text-slate-400 hover:text-slate-600 py-2 transition">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        Clear
+    </a>
+    {% endif %}
+</form>
+
+<!-- Table -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">ID</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">HRN</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Sex</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Age</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Phone</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Registered</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for patient in page_obj %}
+            <tr class="hover:bg-gray-50 transition">
+                <td class="px-4 py-3 text-gray-400 font-mono text-xs">{{ patient.pk }}</td>
+                <td class="px-4 py-3 text-gray-500 font-mono text-xs">{{ patient.hrn_number|default:"—" }}</td>
+                <td class="px-4 py-3 font-medium text-gray-900">{{ patient.last_name }}, {{ patient.first_name }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ patient.get_sex_display }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ patient.age }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ patient.phone_number }}</td>
+                <td class="px-4 py-3 text-gray-400 text-xs">{{ patient.created_at|date:"M d, Y" }}</td>
+                <td class="px-4 py-3 text-right">
+                    <a href="{% url 'dashboard:patient_detail' patient.pk %}"
+                       class="text-blue-600 hover:text-blue-800 font-medium transition mr-3">View</a>
+                    <a href="{% url 'dashboard:patient_edit' patient.pk %}"
+                       class="text-gray-500 hover:text-gray-700 font-medium transition">Edit</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="px-4 py-8 text-center text-gray-400">No patients found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} — {{ page_obj.paginator.count }} patients</span>
+    <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&sex={{ sex }}"
+           class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 transition">Previous</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&sex={{ sex }}"
+           class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 transition">Next</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

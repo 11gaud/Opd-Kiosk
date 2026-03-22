@@ -1,0 +1,136 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Home{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Date header -->
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-xl font-bold text-slate-800">Good morning, {{ request.user.get_full_name|default:request.user.username }}</h1>
+        <p class="text-sm text-slate-500 mt-0.5">{{ today|date:"l, F j, Y" }} &mdash; OPD Daily Overview</p>
+    </div>
+    <a href="{% url 'dashboard:queue_board' %}"
+       class="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+        </svg>
+        Manage Queue
+    </a>
+</div>
+
+<!-- KPI cards -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+             style="background:rgba(59,130,246,.1)">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-slate-800">{{ total_transactions }}</p>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Transactions Today</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+             style="background:rgba(16,185,129,.1)">
+            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-slate-800">{{ available_doctors }}</p>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Available Doctors</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+             style="background:rgba(139,92,246,.1)">
+            <svg class="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-slate-800">{{ queue_stats|length }}</p>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Active Services</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- Queue status -->
+<div class="mb-2 flex items-center justify-between">
+    <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Queue Status</h2>
+    <a href="{% url 'dashboard:queue_board' %}" class="text-xs text-blue-600 hover:text-blue-800 font-medium transition">View Board →</a>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    {% for stat in queue_stats %}
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+            <span class="text-lg leading-none">{{ stat.service.icon }}</span>
+            <span class="font-semibold text-slate-800 text-sm truncate">{{ stat.service.label }}</span>
+        </div>
+        <div class="grid grid-cols-3 gap-1 text-center">
+            <div class="rounded-lg py-2" style="background:rgba(59,130,246,.06)">
+                <p class="text-lg font-bold text-blue-700">{{ stat.issued }}</p>
+                <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Issued</p>
+            </div>
+            <div class="rounded-lg py-2" style="background:rgba(16,185,129,.06)">
+                <p class="text-lg font-bold text-emerald-600">{{ stat.serving }}</p>
+                <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Serving</p>
+            </div>
+            <div class="rounded-lg py-2" style="background:rgba(245,158,11,.06)">
+                <p class="text-lg font-bold text-amber-500">{{ stat.waiting }}</p>
+                <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Waiting</p>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-8 text-center">
+        <p class="text-slate-400 text-sm">No active services configured.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Quick links -->
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+    <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Quick Access</h2>
+    <div class="flex flex-wrap gap-3">
+        <a href="{% url 'dashboard:patient_list' %}"
+           class="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-lg transition">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Patient Records
+        </a>
+        <a href="{% url 'dashboard:transaction_list' %}"
+           class="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-lg transition">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Today's Transactions
+        </a>
+        <a href="{% url 'dashboard:doctor_list' %}"
+           class="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-lg transition">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Doctors
+        </a>
+        <a href="{% url 'kiosk:queue_display' %}" target="_blank"
+           class="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-lg transition">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            Queue Display ↗
+        </a>
+    </div>
+</div>
+
+{% endblock %}

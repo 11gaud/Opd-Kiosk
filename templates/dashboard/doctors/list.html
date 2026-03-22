@@ -1,0 +1,55 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Doctors{% endblock %}
+{% block page_title %}Doctors{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-5">
+    <!-- Availability filter -->
+    <form method="get" class="flex items-center gap-3 bg-white border border-slate-200 shadow-sm rounded-xl px-4 py-3">
+        <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">Availability</label>
+        <div class="relative">
+            <select name="availability" onchange="this.form.submit()"
+                class="appearance-none border border-slate-200 rounded-lg pl-3 pr-8 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition cursor-pointer">
+                <option value="">All</option>
+                {% for val, label in availability_choices %}
+                <option value="{{ val }}" {% if current_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <svg class="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+    </form>
+    <a href="{% url 'dashboard:doctor_add' %}"
+       class="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add Doctor
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Specialization</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Room</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Schedule Notes</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Availability</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for doctor in doctors %}
+                {% include "dashboard/partials/_doctor_row.html" with doctor=doctor %}
+            {% empty %}
+            <tr>
+                <td colspan="6" class="px-4 py-8 text-center text-gray-400">No doctors found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

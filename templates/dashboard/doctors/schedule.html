@@ -1,0 +1,219 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Schedule — {{ doctor.full_name }}{% endblock %}
+{% block page_title %}Monthly Schedule — {{ doctor.full_name }}{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="mb-4 space-y-1">
+    {% for msg in messages %}
+    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-lg text-sm">{{ msg }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+    <!-- ── LEFT: Monthly Calendar ─────────────────────────────────── -->
+    <div>
+        <!-- Month navigation -->
+        <div class="flex items-center justify-between mb-4">
+            <a href="?year={{ prev_year }}&month={{ prev_month }}"
+               class="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium transition">
+                ← Prev
+            </a>
+            <h2 class="text-base font-bold text-gray-800">{{ month_name }} {{ year }}</h2>
+            <a href="?year={{ next_year }}&month={{ next_month }}"
+               class="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium transition">
+                Next →
+            </a>
+        </div>
+
+        <!-- Calendar grid -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+            <div class="grid grid-cols-7 bg-gray-50 border-b border-gray-100">
+                {% for hdr in day_headers %}
+                <div class="py-1.5 text-center text-[10px] font-semibold text-gray-500 uppercase tracking-wide">{{ hdr }}</div>
+                {% endfor %}
+            </div>
+
+            {% for week in week_rows %}
+            <div class="grid grid-cols-7 border-b border-gray-50 last:border-b-0">
+                {% for cell in week %}
+                <div class="border-r border-gray-50 last:border-r-0 p-0.5">
+                    {% include "dashboard/partials/_schedule_day.html" with day=cell.day schedule=cell.schedule current_month=month %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Legend -->
+        <div class="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+            <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-green-100 border border-green-200"></div> Scheduled</div>
+            <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-red-100 border border-red-200"></div> Day Off</div>
+            <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-white border border-gray-200"></div> Not set</div>
+            <span class="text-gray-400">Click a day to edit its schedule.</span>
+        </div>
+    </div>
+
+    <!-- ── RIGHT: Panel (Day Editor / Weekly Pattern) ─────────────── -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-4">
+
+        <!-- ── Day Editor (hidden until a day is clicked) ─────────── -->
+        <div id="day-editor-section" class="hidden">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h3 class="text-base font-bold text-gray-800">Edit Day</h3>
+                    <p id="de-date-label" class="text-sm text-indigo-600 font-medium mt-0.5"></p>
+                </div>
+                <button onclick="closeDayEditor()"
+                        class="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 transition">
+                    ← Back
+                </button>
+            </div>
+
+            <form id="day-editor-form" hx-include="this" hx-swap="outerHTML">
+                {% csrf_token %}
+                <input type="hidden" name="current_month" value="{{ month }}">
+
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Start Time</label>
+                        <input type="time" id="de-start" name="start_time"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5">End Time</label>
+                        <input type="time" id="de-end" name="end_time"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <label class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:bg-red-50 hover:border-red-200 transition">
+                        <input type="checkbox" id="de-off" name="is_off" class="w-4 h-4 text-red-500 rounded">
+                        <span class="text-sm text-gray-700 font-medium">Mark as Day Off</span>
+                    </label>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Note <span class="font-normal text-gray-400">(optional)</span></label>
+                        <input type="text" id="de-note" name="note" placeholder="e.g. Half day, Conference..."
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="submit"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-lg text-sm transition">
+                        Save
+                    </button>
+                    <button type="button" onclick="clearDay()"
+                            class="bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-4 py-2.5 rounded-lg text-sm transition">
+                        Clear
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ── Weekly Pattern (default view) ─────────────────────── -->
+        <div id="weekly-form-section">
+            <h3 class="text-base font-bold text-gray-800 mb-1">Weekly Schedule</h3>
+            <p class="text-sm text-gray-500 mb-5">
+                Set hours for each day of the week, then click
+                <strong>Apply</strong> to write this pattern to every matching day in {{ year }}.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="year" value="{{ year }}">
+
+                <div class="space-y-2 mb-6">
+                    {% for day_name in days %}
+                    <div class="flex items-center gap-2 py-2 border-b border-gray-50 last:border-b-0">
+                        <span class="w-8 text-xs font-bold text-gray-700 uppercase flex-shrink-0">
+                            {{ day_name|slice:":3" }}
+                        </span>
+                        <input type="time" name="{{ day_name }}_start"
+                               class="flex-1 min-w-0 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-400 text-xs flex-shrink-0">to</span>
+                        <input type="time" name="{{ day_name }}_end"
+                               class="flex-1 min-w-0 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label class="flex items-center gap-1 text-xs text-gray-500 cursor-pointer flex-shrink-0 ml-1">
+                            <input type="checkbox" name="{{ day_name }}_off" class="rounded"> Off
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="submit"
+                        onclick="return confirm('Apply this weekly pattern to every day in {{ year }}? Existing entries will be overwritten.');"
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2.5 rounded-lg text-sm transition">
+                    Apply
+                </button>
+            </form>
+        </div>
+
+    </div><!-- end right panel -->
+</div>
+
+<script>
+const DOCTOR_PK = {{ doctor.pk }};
+
+function openDayEditor(cell) {
+    const dateStr  = cell.dataset.date;
+    const start    = cell.dataset.start || '';
+    const end      = cell.dataset.end   || '';
+    const isOff    = cell.dataset.off === 'true';
+    const note     = cell.dataset.note  || '';
+
+    // Populate fields
+    const d = new Date(dateStr + 'T00:00:00');
+    document.getElementById('de-date-label').textContent = d.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    document.getElementById('de-start').value   = start;
+    document.getElementById('de-end').value     = end;
+    document.getElementById('de-off').checked   = isOff;
+    document.getElementById('de-note').value    = note;
+
+    // Wire HTMX: post to the specific day's save URL, target the calendar cell
+    const form = document.getElementById('day-editor-form');
+    form.setAttribute('hx-post',   `/dashboard/doctors/${DOCTOR_PK}/schedule/${dateStr}/save/`);
+    form.setAttribute('hx-target', `#day-${dateStr}`);
+    htmx.process(form);
+
+    // Listen for successful save: close editor and restore selection
+    form._afterSwap = function() { closeDayEditor(); };
+
+    // Toggle panels
+    document.getElementById('weekly-form-section').classList.add('hidden');
+    document.getElementById('day-editor-section').classList.remove('hidden');
+
+    // Highlight selected cell
+    document.querySelectorAll('.cal-selected').forEach(el =>
+        el.classList.remove('cal-selected', 'ring-2', 'ring-blue-400')
+    );
+    cell.classList.add('cal-selected', 'ring-2', 'ring-blue-400');
+}
+
+function closeDayEditor() {
+    document.getElementById('day-editor-section').classList.add('hidden');
+    document.getElementById('weekly-form-section').classList.remove('hidden');
+    document.querySelectorAll('.cal-selected').forEach(el =>
+        el.classList.remove('cal-selected', 'ring-2', 'ring-blue-400')
+    );
+}
+
+function clearDay() {
+    document.getElementById('de-start').value  = '';
+    document.getElementById('de-end').value    = '';
+    document.getElementById('de-off').checked  = false;
+    document.getElementById('de-note').value   = '';
+    // Submit to save (empty = clears entry)
+    document.getElementById('day-editor-form').dispatchEvent(new Event('submit', {bubbles: true}));
+}
+
+// After HTMX swaps a calendar cell, close the day editor
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target && evt.detail.target.id && evt.detail.target.id.startsWith('day-')) {
+        closeDayEditor();
+    }
+});
+</script>
+{% endblock %}

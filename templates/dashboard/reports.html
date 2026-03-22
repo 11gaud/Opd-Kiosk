@@ -1,0 +1,298 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<style>
+/* ── Print styles ─────────────────────────────────── */
+@media print {
+    /* Hide shell chrome */
+    aside, header, footer, .no-print { display: none !important; }
+    /* Full width content */
+    .flex-1.flex.flex-col { margin-left: 0 !important; }
+    body { background: white !important; }
+    /* Print header */
+    #print-header { display: block !important; }
+    /* Force table borders to show */
+    table { border-collapse: collapse; }
+    th, td { border: 1px solid #e2e8f0 !important; }
+    /* Keep cards visible */
+    .bg-white { box-shadow: none !important; }
+    /* Avoid page breaks inside sections */
+    .avoid-break { page-break-inside: avoid; }
+    /* Bar chart adjustments */
+    .bar-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+
+<!-- Print header (hidden on screen) -->
+<div id="print-header" class="hidden mb-6 pb-4 border-b-2 border-slate-800">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-xl font-bold text-slate-900">MetroHealth Specialists Hospital</h1>
+            <p class="text-sm text-slate-500">Hospital Information System — OPD Reports & Analytics</p>
+        </div>
+        <div class="text-right text-sm text-slate-500">
+            <p>Period: {{ start_date|date:"M d, Y" }} – {{ end_date|date:"M d, Y" }}</p>
+            <p>Printed: <span id="print-date"></span></p>
+        </div>
+    </div>
+</div>
+
+<!-- Filter bar -->
+<form method="get" class="no-print bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6 flex flex-wrap gap-3 items-end">
+    <div>
+        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">From</label>
+        <input type="date" name="start" id="inp-start" value="{{ start_date|date:'Y-m-d' }}"
+            class="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+    </div>
+    <div>
+        <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">To</label>
+        <input type="date" name="end" id="inp-end" value="{{ end_date|date:'Y-m-d' }}"
+            class="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+    </div>
+    <button type="submit"
+        class="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        Generate
+    </button>
+    <div class="flex gap-2">
+        <button type="button" onclick="setPreset('today')"
+            class="px-3 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition">Today</button>
+        <button type="button" onclick="setPreset('week')"
+            class="px-3 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition">This Week</button>
+        <button type="button" onclick="setPreset('month')"
+            class="px-3 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition">This Month</button>
+    </div>
+    <button type="button" onclick="window.print()"
+        class="ml-auto flex items-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-600 text-sm font-semibold px-4 py-2 rounded-lg transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+        </svg>
+        Print
+    </button>
+</form>
+
+<!-- KPI cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 avoid-break">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Total Transactions</p>
+        <p class="text-3xl font-bold text-slate-800">{{ total }}</p>
+        <p class="text-xs text-slate-400 mt-1">{{ start_date|date:"M d" }} – {{ end_date|date:"M d, Y" }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">New Patients</p>
+        <p class="text-3xl font-bold text-emerald-600">{{ new_patients }}</p>
+        {% if total %}<p class="text-xs text-slate-400 mt-1">{{ new_patients }} of {{ total }}</p>{% endif %}
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Returning Patients</p>
+        <p class="text-3xl font-bold text-blue-600">{{ returning }}</p>
+        {% if total %}<p class="text-xs text-slate-400 mt-1">{{ returning }} of {{ total }}</p>{% endif %}
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Top Service</p>
+        <p class="text-xl font-bold text-slate-800 leading-tight mt-1">{{ top_service }}</p>
+    </div>
+</div>
+
+<!-- Timing stats -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 avoid-break">
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Earliest Arrival</p>
+        {% if timing.earliest_arrival %}
+        <p class="text-2xl font-bold text-slate-800">{{ timing.earliest_arrival|time:"H:i" }}</p>
+        <p class="text-xs text-slate-400 mt-1">{{ timing.earliest_arrival|date:"M d, Y" }}</p>
+        {% else %}<p class="text-slate-400 text-sm mt-2">—</p>{% endif %}
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Latest Arrival</p>
+        {% if timing.latest_arrival %}
+        <p class="text-2xl font-bold text-slate-800">{{ timing.latest_arrival|time:"H:i" }}</p>
+        <p class="text-xs text-slate-400 mt-1">{{ timing.latest_arrival|date:"M d, Y" }}</p>
+        {% else %}<p class="text-slate-400 text-sm mt-2">—</p>{% endif %}
+    </div>
+
+    <div class="bg-white rounded-xl border border-emerald-200 shadow-sm p-5">
+        <p class="text-[11px] font-semibold text-emerald-400 uppercase tracking-widest mb-2">Fastest Service</p>
+        {% if timing.fastest_duration %}
+        <p class="text-2xl font-bold text-emerald-700">{{ timing.fastest_duration }}</p>
+        <p class="text-xs text-slate-400 mt-1 truncate" title="{{ timing.fastest_patient }}">{{ timing.fastest_patient }}</p>
+        <p class="text-[10px] text-slate-300 mt-0.5">
+            In: {{ timing.fastest_entry.arrived_at|time:"H:i" }} &rarr; Out: {{ timing.fastest_entry.done_at|time:"H:i" }}
+        </p>
+        {% else %}<p class="text-slate-400 text-sm mt-2">No completed records</p>{% endif %}
+    </div>
+
+    <div class="bg-white rounded-xl border border-amber-200 shadow-sm p-5">
+        <p class="text-[11px] font-semibold text-amber-400 uppercase tracking-widest mb-2">Slowest Service</p>
+        {% if timing.slowest_duration %}
+        <p class="text-2xl font-bold text-amber-700">{{ timing.slowest_duration }}</p>
+        <p class="text-xs text-slate-400 mt-1 truncate" title="{{ timing.slowest_patient }}">{{ timing.slowest_patient }}</p>
+        <p class="text-[10px] text-slate-300 mt-0.5">
+            In: {{ timing.slowest_entry.arrived_at|time:"H:i" }} &rarr; Out: {{ timing.slowest_entry.done_at|time:"H:i" }}
+        </p>
+        {% else %}<p class="text-slate-400 text-sm mt-2">No completed records</p>{% endif %}
+    </div>
+
+</div>
+
+<!-- Daily trend -->
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-6 avoid-break">
+    <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Daily Transaction Trend</h2>
+    {% if daily_trend %}
+    <div class="flex items-end gap-1 h-32 overflow-x-auto pb-1">
+        {% for day in daily_trend %}
+        <div class="flex flex-col items-center gap-1 flex-shrink-0" style="min-width:28px">
+            <span class="text-[9px] text-slate-400 font-medium">{{ day.count }}</span>
+            <div class="w-full rounded-t bar-fill"
+                 style="height:{% widthratio day.count max_day_count 96 %}px; background:linear-gradient(to top,#2563eb,#60a5fa); min-height:4px"
+                 title="{{ day.day|date:'M d' }}: {{ day.count }} transaction{{ day.count|pluralize }}">
+            </div>
+            <span class="text-[9px] text-slate-400 whitespace-nowrap">{{ day.day|date:"M d" }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-slate-400 py-8 text-center">No transactions in this date range.</p>
+    {% endif %}
+</div>
+
+<!-- Payment + Services -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden avoid-break">
+        <div class="px-5 py-3 border-b border-slate-100">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Payment Methods</h2>
+        </div>
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-b border-slate-100">
+                <tr>
+                    <th class="px-5 py-2.5 text-left text-xs font-semibold text-slate-500">Method</th>
+                    <th class="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">Count</th>
+                    <th class="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">Share</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for row in payment_rows %}
+                <tr>
+                    <td class="px-5 py-3 font-medium text-slate-700">{{ row.label }}</td>
+                    <td class="px-5 py-3 text-right font-semibold text-slate-800">{{ row.count }}</td>
+                    <td class="px-5 py-3 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <div class="w-16 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                <div class="h-full rounded-full bg-blue-500 bar-fill" style="width:{{ row.pct }}%"></div>
+                            </div>
+                            <span class="text-xs text-slate-500 w-8 text-right">{{ row.pct }}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="px-5 py-6 text-center text-slate-400 text-sm">No data.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden avoid-break">
+        <div class="px-5 py-3 border-b border-slate-100">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Services Used</h2>
+        </div>
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-b border-slate-100">
+                <tr>
+                    <th class="px-5 py-2.5 text-left text-xs font-semibold text-slate-500">Service</th>
+                    <th class="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">Count</th>
+                    <th class="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">Share</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for row in service_rows %}
+                <tr>
+                    <td class="px-5 py-3 font-medium text-slate-700">{{ row.icon }} {{ row.label }}</td>
+                    <td class="px-5 py-3 text-right font-semibold text-slate-800">{{ row.count }}</td>
+                    <td class="px-5 py-3 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <div class="w-16 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                <div class="h-full rounded-full bg-violet-500 bar-fill" style="width:{{ row.pct }}%"></div>
+                            </div>
+                            <span class="text-xs text-slate-500 w-8 text-right">{{ row.pct }}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="px-5 py-6 text-center text-slate-400 text-sm">No data.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- Doctors -->
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden avoid-break">
+    <div class="px-5 py-3 border-b border-slate-100">
+        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Transactions by Doctor</h2>
+    </div>
+    <table class="w-full text-sm">
+        <thead class="bg-slate-50 border-b border-slate-100">
+            <tr>
+                <th class="px-5 py-2.5 text-left text-xs font-semibold text-slate-500">Doctor</th>
+                <th class="px-5 py-2.5 text-left text-xs font-semibold text-slate-500">Specialization</th>
+                <th class="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">Transactions</th>
+                <th class="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">Share</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {% for row in doctor_rows %}
+            <tr>
+                <td class="px-5 py-3 font-semibold text-slate-800">{{ row.full_name }}</td>
+                <td class="px-5 py-3 text-slate-500">{{ row.specialization }}</td>
+                <td class="px-5 py-3 text-right font-semibold text-slate-800">{{ row.count }}</td>
+                <td class="px-5 py-3 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                        <div class="w-24 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                            {% if total %}<div class="h-full rounded-full bg-emerald-500 bar-fill" style="width:{% widthratio row.count total 100 %}%"></div>{% endif %}
+                        </div>
+                        <span class="text-xs text-slate-500 w-8 text-right">{% if total %}{% widthratio row.count total 100 %}%{% else %}—{% endif %}</span>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="px-5 py-6 text-center text-slate-400 text-sm">No doctor data in this range.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function setPreset(preset) {
+    const today = new Date();
+    const fmt = d => d.toISOString().slice(0, 10);
+    let start, end = fmt(today);
+    if (preset === 'today') {
+        start = end;
+    } else if (preset === 'week') {
+        const d = new Date(today);
+        d.setDate(d.getDate() - d.getDay() + 1);
+        start = fmt(d);
+    } else if (preset === 'month') {
+        start = fmt(new Date(today.getFullYear(), today.getMonth(), 1));
+    }
+    document.getElementById('inp-start').value = start;
+    document.getElementById('inp-end').value = end;
+    document.querySelector('form').submit();
+}
+
+// Set print timestamp
+document.getElementById('print-date').textContent =
+    new Date().toLocaleString('en-PH', {dateStyle:'long', timeStyle:'short'});
+</script>
+{% endblock %}

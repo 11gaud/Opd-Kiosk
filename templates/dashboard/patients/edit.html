@@ -1,0 +1,41 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Edit — {{ patient.full_name }}{% endblock %}
+{% block page_title %}Edit Patient — {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+    <a href="{% url 'dashboard:patient_detail' patient.pk %}"
+       class="text-sm text-gray-500 hover:text-gray-700 transition mb-4 block">&larr; Back to patient</a>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <form method="post">
+            {% csrf_token %}
+            <div class="grid grid-cols-2 gap-4">
+                {% for field in form %}
+                <div class="{% if field.name == 'address' %}col-span-2{% endif %}">
+                    <label for="{{ field.id_for_label }}"
+                           class="block text-xs font-medium text-gray-600 mb-1">
+                        {{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ field.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-6 flex gap-3">
+                <button type="submit"
+                    class="bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
+                    Save Changes
+                </button>
+                <a href="{% url 'dashboard:patient_detail' patient.pk %}"
+                   class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-5 py-2 rounded-lg transition">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
