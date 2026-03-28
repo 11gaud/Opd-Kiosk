@@ -1,7 +1,7 @@
 // ─── Idle Reset Timer ──────────────────────────────────────────────────────
 const IDLE_WARN_SECONDS = 90;   // show warning after 90s idle
 const IDLE_RESET_SECONDS = 30;  // then countdown 30s before reset
-const SKIP_IDLE_ON_PATHS = ['/', '/step/9/'];  // skip idle on start & ticket
+const SKIP_IDLE_ON_PATHS = ['/', '/step/1/', '/step/10/'];  // skip idle on start, services & ticket
 
 const idleOverlay = document.getElementById('idle-overlay');
 const idleCountdown = document.getElementById('idle-countdown');
