@@ -35,7 +35,7 @@
                     <div class="payment-card border-2 border-slate-200 rounded-xl p-4 flex flex-col items-center gap-2 transition-all active:scale-95 text-center
                         {% if choice.data.value == form.payment_method.value %}border-blue-500 bg-blue-50{% endif %}"
                         data-value="{{ choice.data.value }}">
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center
                             {% if choice.data.value == 'selfpay' %}bg-emerald-100
                             {% elif choice.data.value == 'hmo' %}bg-blue-100
                             {% elif choice.data.value == 'corporate' %}bg-violet-100
@@ -80,7 +80,7 @@
             </div>
 
             <button type="submit"
-                class="w-full kiosk-btn-primary text-white text-lg font-bold py-4 rounded-xl transition flex items-center justify-center gap-2">
+                class="w-full kiosk-btn-primary text-white text-xl font-bold py-5 rounded-xl transition flex items-center justify-center gap-2">
                 Continue
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>

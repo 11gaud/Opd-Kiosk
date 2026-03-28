@@ -1,8 +1,8 @@
 from django import forms
 
-INPUT_CLASS = 'w-full border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-3 text-base outline-none transition bg-white text-slate-800 placeholder-slate-400'
-SELECT_CLASS = 'w-full appearance-none border-2 border-slate-200 focus:border-blue-500 rounded-xl pl-4 pr-10 py-3 text-base outline-none transition bg-white text-slate-800 cursor-pointer'
-TEXTAREA_CLASS = 'w-full border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-3 text-base outline-none transition bg-white text-slate-800 placeholder-slate-400 resize-none'
+INPUT_CLASS = 'w-full border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-4 text-base outline-none transition bg-white text-slate-800 placeholder-slate-400'
+SELECT_CLASS = 'w-full appearance-none border-2 border-slate-200 focus:border-blue-500 rounded-xl pl-4 pr-10 py-4 text-base outline-none transition bg-white text-slate-800 cursor-pointer'
+TEXTAREA_CLASS = 'w-full border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-4 text-base outline-none transition bg-white text-slate-800 placeholder-slate-400 resize-none'
 
 CIVIL_STATUS_CHOICES = [
     ('', '-- Select --'),

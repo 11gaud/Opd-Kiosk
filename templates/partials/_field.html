@@ -1,5 +1,5 @@
 <div class="flex flex-col gap-1.5">
-    <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-slate-700">
+    <label for="{{ field.id_for_label }}" class="text-base font-semibold text-slate-700">
         {{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}
     </label>
     {% if field.widget_type == 'select' %}
