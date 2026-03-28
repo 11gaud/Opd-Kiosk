@@ -1,15 +1,3 @@
-// ─── Live Clock ────────────────────────────────────────────────────────────
-const clockEl = document.getElementById('clock');
-function updateClock() {
-    if (clockEl) {
-        clockEl.textContent = new Date().toLocaleTimeString('en-PH', {
-            hour: '2-digit', minute: '2-digit', second: '2-digit'
-        });
-    }
-}
-setInterval(updateClock, 1000);
-updateClock();
-
 // ─── Idle Reset Timer ──────────────────────────────────────────────────────
 const IDLE_WARN_SECONDS = 90;   // show warning after 90s idle
 const IDLE_RESET_SECONDS = 30;  // then countdown 30s before reset

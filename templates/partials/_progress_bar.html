@@ -1,6 +1,6 @@
-{% with labels="Services,Type,Info,Payment,Doctor,Sign,Review,Ticket" %}
+{% with labels="Services,Type,Info,Contact,Payment,Doctor,Sign,Review,Ticket" %}
 <div class="flex items-center">
-    {% for label in labels|slice:":8" %}
+    {% for label in labels|slice:":9" %}
     {% with i=forloop.counter %}
     <div class="flex flex-col items-center flex-shrink-0">
         <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all

@@ -52,7 +52,7 @@
             </button>
         </div>
 
-        <form method="post" action="{% url 'kiosk:step7' %}" id="sig-form">
+        <form method="post" action="{% url 'kiosk:step8' %}" id="sig-form">
             {% csrf_token %}
             <button type="submit" id="submit-sig"
                 class="w-full kiosk-btn-primary text-white text-lg font-bold py-4 rounded-xl transition flex items-center justify-center gap-2">
@@ -107,7 +107,7 @@ document.getElementById('sig-form').addEventListener('submit', async (e) => {
         const resp = await fetch('{% url "kiosk:save_signature" %}', { method: 'POST', body: formData });
         if (resp.ok) {
             const f = document.createElement('form');
-            f.method = 'POST'; f.action = '{% url "kiosk:step7" %}';
+            f.method = 'POST'; f.action = '{% url "kiosk:step8" %}';
             const csrf = document.createElement('input');
             csrf.type = 'hidden'; csrf.name = 'csrfmiddlewaretoken'; csrf.value = '{{ csrf_token }}';
             f.appendChild(csrf); document.body.appendChild(f); f.submit();

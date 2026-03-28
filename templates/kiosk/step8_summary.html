@@ -61,11 +61,11 @@
                 </div>
                 <div class="flex px-4 py-2.5 gap-4">
                     <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Phone</dt>
-                    <dd class="text-sm font-medium text-slate-700">{{ session_data.personal_info.phone_number }}</dd>
+                    <dd class="text-sm font-medium text-slate-700">{{ session_data.contact_info.phone_number }}</dd>
                 </div>
                 <div class="flex px-4 py-2.5 gap-4">
                     <dt class="text-xs text-slate-400 w-28 flex-shrink-0 pt-0.5">Address</dt>
-                    <dd class="text-sm font-medium text-slate-700">{{ session_data.personal_info.address }}</dd>
+                    <dd class="text-sm font-medium text-slate-700">{{ session_data.contact_info.address }}</dd>
                 </div>
                 {% if session_data.personal_info.civil_status %}
                 <div class="flex px-4 py-2.5 gap-4">
@@ -86,7 +86,7 @@
         <div class="rounded-xl border border-slate-100 overflow-hidden">
             <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-100 flex justify-between items-center">
                 <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Payment</p>
-                <a href="{% url 'kiosk:step5' %}" class="text-xs text-blue-600 font-semibold hover:underline">Edit</a>
+                <a href="{% url 'kiosk:step6' %}" class="text-xs text-blue-600 font-semibold hover:underline">Edit</a>
             </div>
             <dl class="divide-y divide-slate-50">
                 <div class="flex px-4 py-2.5 gap-4">
@@ -123,7 +123,7 @@
         <div class="rounded-xl border border-slate-100 overflow-hidden">
             <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-100 flex justify-between items-center">
                 <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Doctor</p>
-                <a href="{% url 'kiosk:step6' %}" class="text-xs text-blue-600 font-semibold hover:underline">Edit</a>
+                <a href="{% url 'kiosk:step7' %}" class="text-xs text-blue-600 font-semibold hover:underline">Edit</a>
             </div>
             <div class="px-4 py-3 flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-blue-700 flex items-center justify-center text-white font-bold flex-shrink-0">

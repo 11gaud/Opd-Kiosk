@@ -2,11 +2,11 @@ import calendar
 from datetime import date
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import models as db_models
-from django.db.models import Count, Q
+from django.db.models import Count, Max, Min, Q
 from django.db.models.functions import TruncDate
+from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -269,7 +269,6 @@ class DoctorScheduleSaveDayView(View):
         try:
             day_date = date.fromisoformat(date_str)
         except ValueError:
-            from django.http import HttpResponseBadRequest
             return HttpResponseBadRequest()
         form = DoctorScheduleDayForm(request.POST)
         if form.is_valid():
@@ -300,7 +299,6 @@ class DoctorScheduleToggleDayOffView(View):
         try:
             day_date = date.fromisoformat(date_str)
         except ValueError:
-            from django.http import HttpResponseBadRequest
             return HttpResponseBadRequest()
         schedule = DoctorSchedule.objects.filter(doctor=doctor, date=day_date).first()
         if schedule is None:
@@ -579,7 +577,6 @@ class ReportsView(View):
             slowest_entry = done_entries[-1]
 
         # Earliest / latest patient arrivals (time-of-day from Transaction)
-        from django.db.models import Min, Max
         arrival_agg = base_qs.aggregate(earliest=Min('created_at'), latest=Max('created_at'))
 
         def fmt_duration(entry):

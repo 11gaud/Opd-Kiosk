@@ -12,7 +12,7 @@ from django.views import View
 from apps.patients.models import Patient
 from django.utils import timezone
 from apps.services.models import Doctor, DoctorSchedule, QueueCounter, Service
-from apps.kiosk.forms import PaymentForm, PersonalInfoForm
+from apps.kiosk.forms import ContactInfoForm, PaymentForm, PersonalInfoForm
 from apps.kiosk.models import Transaction, QueueEntry
 from apps.kiosk.session import KioskSession
 
@@ -110,11 +110,13 @@ class Step3LookupView(View):
                 'last_name': patient.last_name,
                 'birthdate': str(patient.birthdate),
                 'sex': patient.sex,
-                'phone_number': patient.phone_number,
-                'address': patient.address,
                 'civil_status': patient.civil_status,
                 'religion': patient.religion,
                 'hrn_number': patient.hrn_number or '',
+            })
+            session.set('contact_info', {
+                'phone_number': patient.phone_number,
+                'address': patient.address,
             })
             session.advance_to(5)
             return redirect('kiosk:step5')
@@ -163,20 +165,46 @@ class Step4PersonalInfoView(View):
             session.set('personal_info', data)
             session.advance_to(5)
             return redirect('kiosk:step5')
-        return render(request, self.template, {'form': form, 'step': 4})
+        return render(request, self.template, {'form': form, 'step': 4, 'back_url': 'kiosk:step2'})
 
 
 # ---------------------------------------------------------------------------
-# Step 5 — Payment Method
+# Step 5 — Contact & Address
 # ---------------------------------------------------------------------------
 
-class Step5PaymentView(View):
-    template = 'kiosk/step5_payment.html'
+class Step5ContactView(View):
+    template = 'kiosk/step5_contact.html'
 
     def get(self, request):
         session = KioskSession(request)
         if not session.get('personal_info') and not session.get('patient_id'):
             return redirect('kiosk:step1')
+        form = ContactInfoForm(initial=session.get('contact_info', {}))
+        patient_type = session.get('patient_type', 'new')
+        back_url = 'kiosk:step3' if patient_type == 'existing' else 'kiosk:step4'
+        return render(request, self.template, {'form': form, 'step': 5, 'back_url': back_url})
+
+    def post(self, request):
+        form = ContactInfoForm(request.POST)
+        if form.is_valid():
+            session = KioskSession(request)
+            session.set('contact_info', form.cleaned_data)
+            session.advance_to(6)
+            return redirect('kiosk:step6')
+        return render(request, self.template, {'form': form, 'step': 5, 'back_url': 'kiosk:step4'})
+
+
+# ---------------------------------------------------------------------------
+# Step 6 — Payment Method
+# ---------------------------------------------------------------------------
+
+class Step6PaymentView(View):
+    template = 'kiosk/step5_payment.html'
+
+    def get(self, request):
+        session = KioskSession(request)
+        if not session.get('contact_info'):
+            return redirect('kiosk:step5')
         initial = {
             'payment_method': session.get('payment_method', ''),
             'hmo_provider': session.get('hmo_provider', ''),
@@ -185,33 +213,31 @@ class Step5PaymentView(View):
             'government_program': session.get('government_program', ''),
         }
         form = PaymentForm(initial=initial)
-        patient_type = session.get('patient_type', 'new')
-        back_url = 'kiosk:step3' if patient_type == 'existing' else 'kiosk:step4'
-        return render(request, self.template, {'form': form, 'step': 5, 'back_url': back_url})
+        return render(request, self.template, {'form': form, 'step': 6, 'back_url': 'kiosk:step5'})
 
     def post(self, request):
         form = PaymentForm(request.POST)
         if form.is_valid():
             session = KioskSession(request)
             session.update(form.cleaned_data)
-            session.advance_to(6)
+            session.advance_to(7)
             if session.includes_consult():
-                return redirect('kiosk:step6')
-            return redirect('kiosk:step7')
-        return render(request, self.template, {'form': form, 'step': 5})
+                return redirect('kiosk:step7')
+            return redirect('kiosk:step8')
+        return render(request, self.template, {'form': form, 'step': 6, 'back_url': 'kiosk:step5'})
 
 
 # ---------------------------------------------------------------------------
-# Step 6 — Doctor Selection (Consult only)
+# Step 7 — Doctor Selection (Consult only)
 # ---------------------------------------------------------------------------
 
-class Step6DoctorView(View):
+class Step7DoctorView(View):
     template = 'kiosk/step6_doctor.html'
 
     def get(self, request):
         session = KioskSession(request)
         if not session.includes_consult():
-            return redirect('kiosk:step7')
+            return redirect('kiosk:step8')
         today = timezone.localdate()
         doctors = Doctor.objects.filter(
             availability=Doctor.Availability.AVAILABLE,
@@ -221,8 +247,8 @@ class Step6DoctorView(View):
         return render(request, self.template, {
             'doctors': doctors,
             'selected_doctor_id': session.get('doctor_id'),
-            'step': 6,
-            'back_url': 'kiosk:step5',
+            'step': 7,
+            'back_url': 'kiosk:step6',
         })
 
     def post(self, request):
@@ -235,31 +261,31 @@ class Step6DoctorView(View):
                 session.set('doctor_id', None)
         else:
             session.set('doctor_id', None)
-        session.advance_to(7)
-        return redirect('kiosk:step7')
+        session.advance_to(8)
+        return redirect('kiosk:step8')
 
 
 # ---------------------------------------------------------------------------
-# Step 7 — Signature & Consent
+# Step 8 — Signature & Consent
 # ---------------------------------------------------------------------------
 
-class Step7SignatureView(View):
+class Step8SignatureView(View):
     template = 'kiosk/step7_signature.html'
 
     def get(self, request):
         session = KioskSession(request)
         if not session.get('payment_method'):
-            return redirect('kiosk:step5')
-        back_url = 'kiosk:step6' if session.includes_consult() else 'kiosk:step5'
-        return render(request, self.template, {'step': 7, 'back_url': back_url})
+            return redirect('kiosk:step6')
+        back_url = 'kiosk:step7' if session.includes_consult() else 'kiosk:step6'
+        return render(request, self.template, {'step': 8, 'back_url': back_url})
 
     def post(self, request):
         session = KioskSession(request)
         if not session.get('signature_saved'):
             messages.error(request, 'Please provide your signature before continuing.')
-            return redirect('kiosk:step7')
-        session.advance_to(8)
-        return redirect('kiosk:step8')
+            return redirect('kiosk:step8')
+        session.advance_to(9)
+        return redirect('kiosk:step9')
 
 
 class SaveSignatureView(View):
@@ -290,16 +316,16 @@ class SaveSignatureView(View):
 
 
 # ---------------------------------------------------------------------------
-# Step 8 — Summary / Review
+# Step 9 — Summary / Review
 # ---------------------------------------------------------------------------
 
-class Step8SummaryView(View):
+class Step9SummaryView(View):
     template = 'kiosk/step8_summary.html'
 
     def get(self, request):
         session = KioskSession(request)
         if not session.get('signature_saved'):
-            return redirect('kiosk:step7')
+            return redirect('kiosk:step8')
 
         s = session._data()
         services = Service.objects.filter(code__in=s.get('selected_services', []))
@@ -322,8 +348,8 @@ class Step8SummaryView(View):
             'services': services,
             'doctor': doctor,
             'payment_label': payment_labels.get(s.get('payment_method', ''), ''),
-            'step': 8,
-            'back_url': 'kiosk:step7',
+            'step': 9,
+            'back_url': 'kiosk:step8',
         })
 
 
@@ -345,14 +371,15 @@ class ConfirmTransactionView(View):
                 patient = Patient.objects.get(pk=s['patient_id'])
             else:
                 info = s.get('personal_info', {})
+                contact = s.get('contact_info', {})
                 patient = Patient.objects.create(
                     first_name=info.get('first_name', ''),
                     middle_name=info.get('middle_name', ''),
                     last_name=info.get('last_name', ''),
                     birthdate=info.get('birthdate'),
                     sex=info.get('sex', 'M'),
-                    phone_number=info.get('phone_number', ''),
-                    address=info.get('address', ''),
+                    phone_number=contact.get('phone_number', ''),
+                    address=contact.get('address', ''),
                     civil_status=info.get('civil_status', ''),
                     religion=info.get('religion', ''),
                     hrn_number=info.get('hrn_number') or None,
@@ -408,14 +435,14 @@ class ConfirmTransactionView(View):
         session.clear()
         session.set('ticket_txn_id', txn.pk)
 
-        return JsonResponse({'status': 'ok', 'redirect': '/step/9/'})
+        return JsonResponse({'status': 'ok', 'redirect': '/step/10/'})
 
 
 # ---------------------------------------------------------------------------
-# Step 9 — Queue Ticket
+# Step 10 — Queue Ticket
 # ---------------------------------------------------------------------------
 
-class Step9TicketView(View):
+class Step10TicketView(View):
     template = 'kiosk/step9_ticket.html'
 
     def get(self, request):
@@ -427,7 +454,7 @@ class Step9TicketView(View):
             Transaction.objects.select_related('patient', 'doctor').prefetch_related('services'),
             pk=txn_id,
         )
-        return render(request, self.template, {'txn': txn, 'step': 9})
+        return render(request, self.template, {'txn': txn, 'step': 10})
 
 
 # ---------------------------------------------------------------------------
@@ -439,9 +466,6 @@ class QueueDisplayView(View):
     template = 'kiosk/queue_display.html'
 
     def get(self, request):
-        from apps.services.models import QueueCounter, Service
-        from django.utils import timezone
-
         today = timezone.localdate()
         services = Service.objects.filter(is_active=True)
         counters = QueueCounter.objects.filter(date=today).select_related('service')

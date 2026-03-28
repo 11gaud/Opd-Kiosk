@@ -38,11 +38,6 @@ class PersonalInfoForm(forms.Form):
     age = forms.IntegerField(required=False, widget=forms.HiddenInput())
     sex = forms.ChoiceField(choices=SEX_CHOICES, label='Sex',
         widget=forms.Select(attrs={'class': SELECT_CLASS}))
-    phone_number = forms.CharField(max_length=20, label='Phone Number',
-        widget=forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'e.g. 09xx-xxx-xxxx', 'type': 'tel'}))
-    address = forms.CharField(label='Address',
-        widget=forms.Textarea(attrs={'class': TEXTAREA_CLASS, 'rows': '3',
-                                     'placeholder': 'House/Unit No., Street, Barangay, City, Province'}))
     civil_status = forms.ChoiceField(choices=CIVIL_STATUS_CHOICES, required=False, label='Civil Status',
         widget=forms.Select(attrs={'class': SELECT_CLASS}))
     religion = forms.CharField(max_length=100, required=False, label='Religion',
@@ -55,6 +50,14 @@ class PersonalInfoForm(forms.Form):
         if not value:
             raise forms.ValidationError('Please select sex.')
         return value
+
+
+class ContactInfoForm(forms.Form):
+    phone_number = forms.CharField(max_length=20, label='Phone Number',
+        widget=forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'e.g. 09xx-xxx-xxxx', 'type': 'tel'}))
+    address = forms.CharField(label='Address',
+        widget=forms.Textarea(attrs={'class': TEXTAREA_CLASS, 'rows': '3',
+                                     'placeholder': 'House/Unit No., Street, Barangay, City, Province'}))
 
 
 class PaymentForm(forms.Form):
