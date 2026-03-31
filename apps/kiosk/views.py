@@ -221,14 +221,12 @@ class Step6PaymentView(View):
             session = KioskSession(request)
             session.update(form.cleaned_data)
             session.advance_to(7)
-            if session.includes_consult():
-                return redirect('kiosk:step7')
-            return redirect('kiosk:step8')
+            return redirect('kiosk:step7')
         return render(request, self.template, {'form': form, 'step': 6, 'back_url': 'kiosk:step5'})
 
 
 # ---------------------------------------------------------------------------
-# Step 7 — Doctor Selection (Consult only)
+# Step 7 — Doctor Selection
 # ---------------------------------------------------------------------------
 
 class Step7DoctorView(View):
@@ -236,8 +234,6 @@ class Step7DoctorView(View):
 
     def get(self, request):
         session = KioskSession(request)
-        if not session.includes_consult():
-            return redirect('kiosk:step8')
         today = timezone.localdate()
         doctors = Doctor.objects.filter(
             availability=Doctor.Availability.AVAILABLE,
@@ -276,8 +272,7 @@ class Step8SignatureView(View):
         session = KioskSession(request)
         if not session.get('payment_method'):
             return redirect('kiosk:step6')
-        back_url = 'kiosk:step7' if session.includes_consult() else 'kiosk:step6'
-        return render(request, self.template, {'step': 8, 'back_url': back_url})
+        return render(request, self.template, {'step': 8, 'back_url': 'kiosk:step7'})
 
     def post(self, request):
         session = KioskSession(request)

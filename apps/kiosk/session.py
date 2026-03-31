@@ -34,6 +34,3 @@ class KioskSession:
     def advance_to(self, step: int):
         self._data()['step'] = step
         self._request.session.modified = True
-
-    def includes_consult(self) -> bool:
-        return 'CONSULT' in self._data().get('selected_services', [])

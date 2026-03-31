@@ -3,14 +3,6 @@
 {% block page_title %}Monthly Schedule — {{ doctor.full_name }}{% endblock %}
 
 {% block content %}
-{% if messages %}
-<div class="mb-4 space-y-1">
-    {% for msg in messages %}
-    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-lg text-sm">{{ msg }}</div>
-    {% endfor %}
-</div>
-{% endif %}
-
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
     <!-- ── LEFT: Monthly Calendar ─────────────────────────────────── -->
