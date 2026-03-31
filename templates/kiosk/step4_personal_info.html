@@ -75,7 +75,6 @@
                             </div>
                         </div>
                         <input type="hidden" name="birthdate" id="id_birthdate" value="{{ form.birthdate.value|default:'' }}">
-                        <input type="hidden" name="age" id="id_age" value="{{ form.age.value|default:'' }}">
                         {% if form.birthdate.errors %}
                         <p class="text-red-500 text-sm mt-1">{{ form.birthdate.errors.0 }}</p>
                         {% endif %}
@@ -118,7 +117,6 @@
     const daySel     = document.getElementById('birth_day');
     const yearSel    = document.getElementById('birth_year');
     const hidden     = document.getElementById('id_birthdate');
-    const ageHidden  = document.getElementById('id_age');
     const ageDisplay = document.getElementById('age_display');
     const ageValue   = document.getElementById('age_value');
 
@@ -156,12 +154,10 @@
         if (m && d && y) {
             hidden.value = `${y}-${m}-${d}`;
             const age = calcAge(y, m, d);
-            ageHidden.value = age;
             ageValue.textContent = age;
             ageDisplay.classList.remove('hidden');
         } else {
             hidden.value = '';
-            ageHidden.value = '';
             ageDisplay.classList.add('hidden');
         }
     }

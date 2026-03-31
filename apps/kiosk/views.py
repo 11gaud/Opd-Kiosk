@@ -11,7 +11,7 @@ from django.views import View
 
 from apps.patients.models import Patient
 from django.utils import timezone
-from apps.services.models import Doctor, DoctorSchedule, QueueCounter, Service
+from apps.services.models import Doctor, QueueCounter, Service
 from apps.kiosk.forms import ContactInfoForm, PaymentForm, PersonalInfoForm
 from apps.kiosk.models import Transaction, QueueEntry
 from apps.kiosk.session import KioskSession
@@ -336,12 +336,7 @@ class Step9SummaryView(View):
             except Doctor.DoesNotExist:
                 pass
 
-        payment_labels = {
-            'selfpay': 'Self-Pay',
-            'hmo': 'HMO / Insurance',
-            'corporate': 'Corporate',
-            'government_assistance': 'Government Assistance',
-        }
+        payment_labels = dict(Transaction.PaymentMethod.choices)
 
         return render(request, self.template, {
             'session_data': s,

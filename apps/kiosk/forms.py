@@ -18,13 +18,6 @@ SEX_CHOICES = [
     ('F', 'Female'),
 ]
 
-PAYMENT_CHOICES = [
-    ('selfpay', 'Self-Pay'),
-    ('hmo', 'HMO / Insurance'),
-    ('corporate', 'Corporate'),
-    ('government_assistance', 'Government Assistance'),
-]
-
 
 class PersonalInfoForm(forms.Form):
     first_name = forms.CharField(max_length=100, label='First Name',
@@ -35,7 +28,6 @@ class PersonalInfoForm(forms.Form):
         widget=forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'e.g. Dela Cruz'}))
     birthdate = forms.DateField(label='Date of Birth',
         widget=forms.DateInput(attrs={'type': 'date', 'class': INPUT_CLASS}))
-    age = forms.IntegerField(required=False, widget=forms.HiddenInput())
     sex = forms.ChoiceField(choices=SEX_CHOICES, label='Sex',
         widget=forms.Select(attrs={'class': SELECT_CLASS}))
     civil_status = forms.ChoiceField(choices=CIVIL_STATUS_CHOICES, required=False, label='Civil Status',
@@ -62,7 +54,12 @@ class ContactInfoForm(forms.Form):
 
 class PaymentForm(forms.Form):
     payment_method = forms.ChoiceField(
-        choices=PAYMENT_CHOICES,
+        choices=[
+            ('selfpay', 'Self-Pay'),
+            ('hmo', 'HMO / Insurance'),
+            ('corporate', 'Corporate'),
+            ('government_assistance', 'Government Assistance'),
+        ],
         widget=forms.RadioSelect(attrs={'class': 'sr-only peer'}),
         label='Payment Type',
     )
